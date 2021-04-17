@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>专业的网页弹幕插件</title>
+    <link rel="shortcut icon" href="https://nullptr.oss-cn-hangzhou.aliyuncs.com/favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" type="text/css" href="https://matery.oss-cn-hangzhou.aliyuncs.com/barrager/css/bootstrap.min.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="https://matery.oss-cn-hangzhou.aliyuncs.com/barrager/css/style.css" />
+    <link rel="stylesheet" type="text/css" href="https://matery.oss-cn-hangzhou.aliyuncs.com/barrager/css/barrager.css">
+    <!-- JS dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/leancloud-storage@4.10.1/dist/av-min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.js"></script>
+    <script type="text/javascript" src="https://matery.oss-cn-hangzhou.aliyuncs.com/barrager/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="https://matery.oss-cn-hangzhou.aliyuncs.com/barrager/js/jquery.barrager.js"></script>
+</head>
+<body class="bb-js">
+    <div class="container">
+        <section class="bb-section">
+            <div class="lead-top">
+                <div style="margin-top: 50px">
+                </div>
+            </div>
+        </section>
+        <section id="custom" class="bb-section">
+            <div class="page-header">
+                <h4>发送弹幕</h4>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <form class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label" >弹幕</label>
+                            <div class="col-sm-6">
+                                <label>
+                                    <input class="form-control" name="info" type="text" placeholder="弹幕文字信息"/>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label" >链接</label>
+                            <div class="col-sm-6">
+                                <label>
+                                    <input class="form-control" name="href" type="text" placeholder="https://jaav.com.cn"/>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label" >速度</label>
+                            <div class="col-sm-2">
+                                <label>
+                                    <input  class="form-control"  name="speed" type="text" placeholder="6" value="16" />
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label" ></label>
+                            <div class="col-sm-3">
+                                <button  class="btn btn-primary   bb-light-blue"  onclick="run()">运行</button>
+                            </div>
+                            <div class="col-sm-3">
+                                <button  class="btn btn-warning"  onclick="clear_barrage()"> 清除</button>
+                            </div>
+                        </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script type="text/javascript">
+    $(function() {
+        do_barrager();
+        async function do_barrager() {
+            let lists = [];
+            AV.init({
+                appId: "zNeXiIujwazmyGjWLLrufvAh-MdYXbMMI",
+                appKey: "9DSsEV1aakMsNzhMsEzL3l67"
+            });
+            //查询弹幕，此处为异步
+            const query = new AV.Query('barrager');
+            const barrager = await query.find().then((barrager) => {
+                lists = barrager;
+            })
+            let length = lists.length;
+            let index = 0;
+            const timer = setInterval(() => {
+                if (index === length) {
+                    clearInterval(timer);
+                    do_barrager()
+                } else {
+                    let obj = lists[index]
+                    let jsonObject = eval('(' + JSON.stringify(obj) + ')');
+                    $('body').barrager({
+                        'img': 'static/img/' + Math.floor(Math.random() * 3) + ".png",
+                        'href': jsonObject.href,
+                        'info': jsonObject.info,
+                        'speed': jsonObject.speed
+                    });
+                    index++;
+                }
+            }, 250)
+        }
+    });
+
+    //插入弹幕
+    function  run(){
+        let info = $('input[name=info]').val();
+        //判断info是否为空，为空则等于'请填写弹幕文字'
+        (info === '' ) ?  info='请填写弹幕文字' : info=info;
+        const href = $('input[name=href]').val();
+        const speed = parseInt($('input[name=speed]').val());
+        AV.init({
+            appId: "zNeXiIujwazmyGjWLLrufvAh-MdYXbMMI",
+            appKey: "9DSsEV1aakMsNzhMsEzL3l67"
+        });
+        const Barrager = AV.Object.extend('barrager');
+        const barrager = new Barrager();
+        barrager.set('href', href);
+        barrager.set('info', info);
+        barrager.set('speed', speed);
+        // 将对象保存到云端
+        barrager.save().then((todo) => {
+            console.log(`保存成功objectId：${todo.id}`);
+        });
+    }
+
+    function  clear_barrage()
+    {
+        $.fn.barrager.removeAll();
+    }
+
+    </script>
+</body>
+</html>
